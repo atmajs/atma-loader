@@ -1,0 +1,10 @@
+{
+    "name": "atma-loader",
+    "version": "1.0.0",
+    "description": "Base Atma Loader",
+    "author": "Alexander Kit (alex.kit@atmajs.com)",
+    "main": "index.js",
+    "license": "MIT",
+    "dependencies": {},
+    "devDependencies": {}
+}
