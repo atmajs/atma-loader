@@ -37,7 +37,8 @@ function create(data, Compiler){
 				app.handlers.registerHandler(rgx, HttpHandler);
 				app.handlers.registerHandler(rgx_map, HttpHandler);
 			});
-		}
+		},
+		register: function(rootConfig){}
 	}
 }
 
@@ -51,7 +52,7 @@ function create_FileLoader(name, options, Compiler){
 			ensureContent(file);
 			
 			var compiled = compile('compile', file, config);
-			applyResult(file, compile);
+			applyResult(file, compiled);
 		}
 	};
 	if (Compiler.compileAsync) {
@@ -85,8 +86,8 @@ function create_FileLoader(name, options, Compiler){
 		file.sourceMap = compiled.sourceMap;
 		file.content = compiled.content;
 	}
-	function createExtensionsMeta(name, extensions){
-		return obj_createMany(options.extensions, name + ':read');
+	function createExtensionsMeta(){
+		return obj_createMany(options.extensions, [ name + ':read' ]);
 	}
 }
 function create_IncludeLoader(name, options, Compiler){
@@ -101,12 +102,14 @@ function create_IncludeLoader(name, options, Compiler){
 function create_HttpHandler(name, options, Compiler){
 	function try_createFile(base, url, onSuccess, onFailure) {
 		var path = net.Uri.combine(base, url);
-		File.existsAsync(path, function(error, exists){
-			if (exists) 
-				return onSuccess(new File(path));
-			
-			onFailure();
-		})
+		File
+			.existsAsync(path)
+			.fail(onFailure)
+			.done(function(exists){
+				if (exists) 
+					return onSuccess(new File(path));
+				onFailure();
+			});
 	};
 	function try_createFile_byConfig(config, property, url, onSuccess, onFailure){
 		var base = config && config[property];
@@ -145,6 +148,7 @@ function create_HttpHandler(name, options, Compiler){
 				handler.resolve('Not Found - ' + url, 404, 'plain/text');
 			}
 			function onSuccess(file){
+				
 				file
 					.readAsync()
 					.fail(handler.rejectDelegate())
@@ -158,7 +162,7 @@ function create_HttpHandler(name, options, Compiler){
 							: options.mimeType
 							;
 							
-						this.resolve(source, 200, mimeType);
+						handler.resolve(source, 200, mimeType);
 					})
 			}
 		}
@@ -167,7 +171,7 @@ function create_HttpHandler(name, options, Compiler){
 
 
 function getOptions(loaderName, default_) {
-	var options = config.$get('settings.' + loaderName);
+	var options = global.app && app.config.$get('settings.' + loaderName);
 	
 	options = obj_extend(default_, options);
 	if (typeof options.extensions === 'string') 
