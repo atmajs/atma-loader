@@ -74,6 +74,68 @@ function create_FileMiddleware(name, options, Compiler){
 	}
 	File.registerExtensions(createExtensionsMeta());
 	
+	// Virtual Map Files
+	var SourceMapFile = Class({
+		Base: File,
+		Override: {
+			read: function(opts){
+				if (this.exists('mapOnly')) 
+					return this.super(opts)
+				
+				var path = this.getSourcePath();
+				if (path == null) 
+					return null;
+				
+				var file = new File(path);
+				file.read(opts);
+				return (this.content = file.sourceMap);
+			},
+			readAsync: function(opts){
+				if (this.exists('mapOnly')) 
+					return this.super(opts)
+				
+				var path = this.getSourcePath();
+				if (path == null) 
+					return new Class.Deferred().reject({code: 404});
+				
+				var file = new File(path),
+					self = this;
+				
+				return file
+					.readAsync(opts)
+					.pipe(function(){
+						return (self.content = file.sourceMap);
+					});
+			},
+			exists: function(check){
+				if (this.super()) 
+					return true;
+				if (check === 'mapOnly') 
+					return false;
+				
+				var path = this.getSourcePath();
+				return path != null
+					? File.exists(path)
+					: false;
+			}
+		},
+		getSourcePath: function(){
+			var path = this.uri.toString(),
+				source = path.replace(/\.map$/i, '');
+			return path === source
+				? null
+				: source;
+		}
+	});
+	
+	var Factory = File.getFactory();
+	options.extensions.forEach(function(ext){
+		Factory.registerHandler(
+			new RegExp('\\.' + ext + '.map$', 'i')
+			, SourceMapFile
+		);
+	});
+	
 	function compile(method, file, config, cb){
 		var source = file.content,
 			path = file.uri.toString(),
