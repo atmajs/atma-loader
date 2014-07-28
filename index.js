@@ -280,6 +280,8 @@ function create_HttpHandler(name, options, Compiler){
 				
 			if (url[0] === '/') 
 				url = url.substring(1);
+				
+			options.base = config.base;
 			
 			try_createFile_byConfig(config, 'static', url, onSuccess, try_Base);
 			
