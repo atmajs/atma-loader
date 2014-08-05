@@ -145,8 +145,9 @@ function create_FileMiddleware(name, options, Compiler){
 		return Compiler[method](source, path, opts, cb)
 	}
 	function ensureContent(file){
-		if (typeof file.content !== 'string')
-			file.content = file.content.toString();
+		var content = file.content;
+		if (typeof content !== 'string' && content.toString !== _obj_toString)
+			file.content = content.toString();
 	}
 	function applyResult(file, compiled){
 		file.sourceMap = compiled.sourceMap;
@@ -155,6 +156,7 @@ function create_FileMiddleware(name, options, Compiler){
 	function createExtensionsMeta(){
 		return obj_createMany(options.extensions, [ name + ':read' ]);
 	}
+	var _obj_toString = Object.prototype.toString;
 }
 function create_FileLoader(name, options, Loader) {
 	var read = Loader.load || function(path, options){
