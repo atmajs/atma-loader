@@ -163,12 +163,13 @@ function create_FileLoader(name, options, Loader) {
 			throw Error('Sync read is not Supported');
 		},
 		readAsync = Loader.loadAsync || function(path, options, cb){
-			cb(null, this.read(options));
+			cb(null, this.read(path, options));
 		},
 		readSourceMapAsync = Loader.loadSourceMapAsync
 		;
 		
 	var Virtual = Class({
+		Base: File,
 		exists: function(){
 			return true;
 		},
@@ -177,7 +178,7 @@ function create_FileLoader(name, options, Loader) {
 		},
 		read: function(options){
 			return this.content
-				|| (this.content = read.call(this, options));
+				|| (this.content = read.call(this, this.uri.toLocalFile(), options));
 		},
 		readAsync: function(options) {
 			var dfr = new Class.Deferred(),
@@ -185,7 +186,7 @@ function create_FileLoader(name, options, Loader) {
 			if (self.content) 
 				return dfr.resolve(self.content);
 			
-			readAsync.call(this, options, function(error, content){
+			readAsync.call(this, this.uri.toLocalFile(), options, function(error, content){
 				if (error) {
 					dfr.reject(error);
 					return;
@@ -209,12 +210,15 @@ function create_FileLoader(name, options, Loader) {
 			});
 			return dfr;
 		},
-		write: Loader.write  || function(){
-			throw Error('Write is not supported')
-		},
-		writeAsync: Loader.writeAsync || function(){
-			throw Error('Write is not supported')
+		Override: {
+			write: Loader.write  || function(){
+				return this.super(arguments);
+			},
+			writeAsync: Loader.writeAsync || function(){
+				return this.super(arguments);
+			}
 		}
+		
 	});
 	var Factory = File.getFactory();
 	options.extensions.forEach(function(ext){
@@ -238,6 +242,9 @@ function create_IncludeLoader(name, options, Compiler, Loader){
 				cb(resource, Loader.load(resource.url));
 			},
 			process: function(source, resource){
+				if (Compiler == null)
+					return source;
+				
 				options = obj_extend({}, options);
 				// source map for include in nodejs is not required
 				options.sourceMap = false;
@@ -272,7 +279,9 @@ function create_HttpHandler(name, options, Compiler){
 			_resolveStaticPath = (x = global.atma)
 				&& (x = x.server)
 				&& (x = x.StaticContent)
-				&& (x.utils.resolvePath)
+				&& (x = x.utils)
+				&& (x = x.resolvePath)
+				;
 		}
 		if (_resolveStaticPath == null) {
 			onFailure();
