@@ -48,7 +48,7 @@
 	}
 
 	var File = global.io && global.io.File || require('atma-io').File;
-	var Class = require('atma-utils').class;
+	var Utils = require('atma-utils');
 		
 	function create_FileMiddleware(name, options, Compiler){
 		var Middleware = File.middleware[name] = {
@@ -98,7 +98,7 @@
 				
 				var path = this.getSourcePath();
 				if (path == null) 
-					return new Class.Deferred().reject({code: 404});
+					return new Utils.class_Dfr().reject({code: 404});
 				
 				var file = new File(path);
 				return file
@@ -168,7 +168,7 @@
 			readSourceMapAsync = Loader.loadSourceMapAsync
 			;
 			
-		var Virtual = class VirtualFile extends File ({
+		var Virtual = class VirtualFile extends File {
 			constructor () {
 				super(...arguments)
 			}
@@ -309,7 +309,7 @@
 		}
 		var _resolveStaticPath;
 		
-		return Class.create(Class.Deferred, {
+		return Utils.class_create(Utils.class_Dfr, {
 			process: function(req, res, config){
 				var handler = this,
 					url = req.url,
