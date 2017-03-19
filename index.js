@@ -367,9 +367,23 @@
 		})
 	}
 
-
 	function getOptions(loaderName, default_) {
-		var options = global.app && app.config.$get('settings.' + loaderName);
+		var options = global.app 
+			&& app.config 
+			&& app.config.$get 
+			&& app.config.$get('settings.' + loaderName)
+			;
+		if (options == null) {
+			var jsonFile = new File('file://' + process.cwd() + '/package.json');
+			if (jsonFile.exists()) {
+				var json = jsonFile.read();
+				if (json) {
+					options = json[loaderName] 
+						|| Utils.obj_getProperty(json, 'settings.' + loaderName)
+						|| Utils.obj_getProperty(json, 'atma.settings.' + loaderName);
+				}
+			}
+		}
 		
 		options = obj_extend(default_, options);
 		if (typeof options.extensions === 'string') 

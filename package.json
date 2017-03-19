@@ -1,6 +1,6 @@
 {
   "name": "atma-loader",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Base Atma Loader",
   "author": "Alexander Kit (alex.kit@atmajs.com)",
   "main": "index.js",
